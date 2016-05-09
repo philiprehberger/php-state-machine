@@ -2,6 +2,7 @@
     "name": "philiprehberger/php-state-machine",
     "description": "Declarative state machine with guards, hooks, and transition history",
     "keywords": ["state-machine", "fsm", "workflow", "transitions", "guards", "hooks"],
+    "homepage": "https://github.com/philiprehberger/php-state-machine",
     "license": "MIT",
     "type": "library",
     "authors": [
@@ -30,6 +31,11 @@
     },
     "config": {
         "sort-packages": true
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "lint": "vendor/bin/pint",
+        "analyse": "vendor/bin/phpstan analyse"
     },
     "minimum-stability": "dev",
     "prefer-stable": true
