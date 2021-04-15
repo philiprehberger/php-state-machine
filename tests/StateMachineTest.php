@@ -249,6 +249,152 @@ class StateMachineTest extends TestCase
         );
     }
 
+    public function test_payload_is_passed_to_guards(): void
+    {
+        $sm = StateMachine::define()
+            ->states(['pending', 'processing'])
+            ->initial('pending')
+            ->transition('process', 'pending', 'processing')
+            ->guard(fn (object $order, array $payload) => ($payload['approved'] ?? false) === true)
+            ->build();
+
+        $order = new Order;
+
+        $this->assertFalse($sm->can($order, 'process'));
+        $this->assertFalse($sm->can($order, 'process', ['approved' => false]));
+        $this->assertTrue($sm->can($order, 'process', ['approved' => true]));
+    }
+
+    public function test_payload_is_passed_to_before_and_after_hooks(): void
+    {
+        $log = [];
+
+        $sm = StateMachine::define()
+            ->states(['pending', 'processing'])
+            ->initial('pending')
+            ->transition('process', 'pending', 'processing')
+            ->before(function (object $order, array $payload) use (&$log): void {
+                $log[] = 'before:'.($payload['note'] ?? 'none');
+            })
+            ->after(function (object $order, array $payload) use (&$log): void {
+                $log[] = 'after:'.($payload['note'] ?? 'none');
+            })
+            ->build();
+
+        $order = new Order;
+        $sm->apply($order, 'process', ['note' => 'rush']);
+
+        $this->assertSame(['before:rush', 'after:rush'], $log);
+    }
+
+    public function test_payload_defaults_to_empty_array(): void
+    {
+        $receivedPayload = null;
+
+        $sm = StateMachine::define()
+            ->states(['pending', 'processing'])
+            ->initial('pending')
+            ->transition('process', 'pending', 'processing')
+            ->guard(function (object $order, array $payload) use (&$receivedPayload): bool {
+                $receivedPayload = $payload;
+
+                return true;
+            })
+            ->build();
+
+        $order = new Order;
+        $sm->apply($order, 'process');
+
+        $this->assertSame([], $receivedPayload);
+    }
+
+    public function test_apply_with_payload_throws_when_guard_rejects(): void
+    {
+        $sm = StateMachine::define()
+            ->states(['pending', 'processing'])
+            ->initial('pending')
+            ->transition('process', 'pending', 'processing')
+            ->guard(fn (object $order, array $payload) => ($payload['approved'] ?? false) === true)
+            ->build();
+
+        $order = new Order;
+
+        $this->expectException(TransitionNotAllowedException::class);
+        $sm->apply($order, 'process', ['approved' => false]);
+    }
+
+    public function test_available_transitions_returns_correct_list(): void
+    {
+        $sm = $this->buildOrderMachine();
+        $order = new Order;
+
+        $available = $sm->availableTransitions($order);
+
+        $this->assertSame(['process', 'cancel'], $available);
+    }
+
+    public function test_available_transitions_updates_after_state_change(): void
+    {
+        $sm = $this->buildOrderMachine();
+        $order = new Order;
+
+        $sm->apply($order, 'process');
+        $available = $sm->availableTransitions($order);
+
+        $this->assertSame(['ship', 'cancel'], $available);
+    }
+
+    public function test_available_transitions_respects_guards(): void
+    {
+        $sm = StateMachine::define()
+            ->states(['pending', 'processing', 'cancelled'])
+            ->initial('pending')
+            ->transition('process', 'pending', 'processing')
+            ->guard(fn (object $order, array $payload) => $order->isPaid)
+            ->transition('cancel', 'pending', 'cancelled')
+            ->build();
+
+        $order = new Order;
+        $order->isPaid = false;
+
+        $available = $sm->availableTransitions($order);
+
+        $this->assertSame(['cancel'], $available);
+
+        $order->isPaid = true;
+        $available = $sm->availableTransitions($order);
+
+        $this->assertSame(['process', 'cancel'], $available);
+    }
+
+    public function test_available_transitions_respects_payload_in_guards(): void
+    {
+        $sm = StateMachine::define()
+            ->states(['pending', 'processing', 'cancelled'])
+            ->initial('pending')
+            ->transition('process', 'pending', 'processing')
+            ->guard(fn (object $order, array $payload) => ($payload['approved'] ?? false) === true)
+            ->transition('cancel', 'pending', 'cancelled')
+            ->build();
+
+        $order = new Order;
+
+        $this->assertSame(['cancel'], $sm->availableTransitions($order));
+        $this->assertSame(['process', 'cancel'], $sm->availableTransitions($order, ['approved' => true]));
+    }
+
+    public function test_available_transitions_returns_empty_when_none_valid(): void
+    {
+        $sm = $this->buildOrderMachine();
+        $order = new Order;
+
+        $sm->apply($order, 'process');
+        $sm->apply($order, 'ship');
+        $sm->apply($order, 'deliver');
+
+        $this->assertSame([], $sm->availableTransitions($order));
+    }
+
     public function test_custom_state_property(): void
     {
         $sm = StateMachine::define()

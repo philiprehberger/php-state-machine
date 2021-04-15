@@ -36,7 +36,7 @@ final class TransitionBuilder
     /**
      * Add a guard callable that must return true for the transition to proceed.
      *
-     * @param  callable(object): bool  $guard
+     * @param  callable(object, array<string, mixed>): bool  $guard
      */
     public function guard(callable $guard): self
     {
@@ -48,7 +48,7 @@ final class TransitionBuilder
     /**
      * Add a hook to execute before the transition is applied.
      *
-     * @param  callable(object): void  $hook
+     * @param  callable(object, array<string, mixed>): void  $hook
      */
     public function before(callable $hook): self
     {
@@ -60,7 +60,7 @@ final class TransitionBuilder
     /**
      * Add a hook to execute after the transition is applied.
      *
-     * @param  callable(object): void  $hook
+     * @param  callable(object, array<string, mixed>): void  $hook
      */
     public function after(callable $hook): self
     {

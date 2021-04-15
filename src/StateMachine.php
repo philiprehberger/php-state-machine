@@ -43,10 +43,12 @@ final class StateMachine
     /**
      * Apply a named transition to the given entity.
      *
+     * @param  array<string, mixed>  $payload  Optional data passed to guards and hooks
+     *
      * @throws TransitionNotAllowedException If the transition is not allowed from the current state
      * @throws InvalidStateException If the entity's current state is not valid
      */
-    public function apply(object $entity, string $transition): TransitionResult
+    public function apply(object $entity, string $transition, array $payload = []): TransitionResult
     {
         $currentState = $this->currentState($entity);
         $transitionDef = $this->findTransition($transition, $currentState);
@@ -55,12 +57,12 @@ final class StateMachine
             throw new TransitionNotAllowedException($transition, $currentState);
         }
 
-        if (! $this->passesGuards($transitionDef, $entity)) {
+        if (! $this->passesGuards($transitionDef, $entity, $payload)) {
             throw new TransitionNotAllowedException($transition, $currentState);
         }
 
         foreach ($transitionDef->beforeHooks as $hook) {
-            $hook($entity);
+            $hook($entity, $payload);
         }
 
         $this->setState($entity, $transitionDef->to);
@@ -75,7 +77,7 @@ final class StateMachine
         $this->history->record($result);
 
         foreach ($transitionDef->afterHooks as $hook) {
-            $hook($entity);
+            $hook($entity, $payload);
         }
 
         return $result;
@@ -83,8 +85,10 @@ final class StateMachine
 
     /**
      * Check whether a named transition can be applied to the entity.
+     *
+     * @param  array<string, mixed>  $payload  Optional data passed to guards
      */
-    public function can(object $entity, string $transition): bool
+    public function can(object $entity, string $transition, array $payload = []): bool
     {
         $currentState = $this->currentState($entity);
         $transitionDef = $this->findTransition($transition, $currentState);
@@ -93,26 +97,40 @@ final class StateMachine
             return false;
         }
 
-        return $this->passesGuards($transitionDef, $entity);
+        return $this->passesGuards($transitionDef, $entity, $payload);
     }
 
     /**
      * Get all transition names that are currently allowed for the entity.
      *
+     * @param  array<string, mixed>  $payload  Optional data passed to guards
      * @return array<int, string>
      */
-    public function allowedTransitions(object $entity): array
+    public function allowedTransitions(object $entity, array $payload = []): array
     {
         $currentState = $this->currentState($entity);
         $allowed = [];
 
         foreach ($this->transitions as $transition) {
-            if (in_array($currentState, $transition->from, true) && $this->passesGuards($transition, $entity)) {
+            if (in_array($currentState, $transition->from, true) && $this->passesGuards($transition, $entity, $payload)) {
                 $allowed[] = $transition->name;
             }
         }
 
         return $allowed;
+    }
+
+    /**
+     * Get all transition names that are currently available for the entity.
+     *
+     * Alias for `allowedTransitions()`.
+     *
+     * @param  array<string, mixed>  $payload  Optional data passed to guards
+     * @return array<int, string>
+     */
+    public function availableTransitions(object $entity, array $payload = []): array
+    {
+        return $this->allowedTransitions($entity, $payload);
     }
 
     /**
@@ -174,11 +192,13 @@ final class StateMachine
 
     /**
      * Check whether all guards pass for the given transition and entity.
+     *
+     * @param  array<string, mixed>  $payload
      */
-    private function passesGuards(Transition $transition, object $entity): bool
+    private function passesGuards(Transition $transition, object $entity, array $payload = []): bool
     {
         foreach ($transition->guards as $guard) {
-            if (! $guard($entity)) {
+            if (! $guard($entity, $payload)) {
                 return false;
             }
         }

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-03-22
+
+### Added
+- `$payload` parameter on `apply()`, `can()`, `allowedTransitions()` — passes arbitrary data through to guards and hooks
+- `availableTransitions()` method as an alias for `allowedTransitions()`
+- Guards now receive `(object $entity, array $payload)` (backward compatible — payload defaults to `[]`)
+- Before/after hooks now receive `(object $entity, array $payload)`
+
 ## [1.0.5] - 2026-03-23
 
 ### Fixed

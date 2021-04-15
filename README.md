@@ -50,6 +50,23 @@ $result = $sm->apply($order, 'process');
 // $result->to === 'processing'
 ```
 
+### Pass a payload to transitions
+
+```php
+$sm = StateMachine::define()
+    ->states(['pending', 'approved', 'rejected'])
+    ->initial('pending')
+    ->transition('approve', 'pending', 'approved')
+        ->guard(fn (object $order, array $payload) => ($payload['role'] ?? '') === 'manager')
+        ->before(fn (object $order, array $payload) => $order->log[] = 'Approved by '.$payload['user'])
+    ->transition('reject', 'pending', 'rejected')
+    ->build();
+
+$sm->apply($order, 'approve', ['role' => 'manager', 'user' => 'Alice']);
+```
+
+The `$payload` array is passed through to all guards, before hooks, and after hooks. It defaults to `[]` when omitted, so existing guards and hooks that accept only one parameter continue to work.
+
 ### Check if a transition is allowed
 
 ```php
@@ -57,10 +74,14 @@ $sm->can($order, 'ship');    // true
 $sm->can($order, 'deliver'); // false
 ```
 
-### Get allowed transitions
+### Get available transitions
 
 ```php
 $sm->allowedTransitions($order); // ['ship', 'cancel']
+$sm->availableTransitions($order); // ['ship', 'cancel'] (alias)
+
+// Payload is forwarded to guards when checking availability:
+$sm->availableTransitions($order, ['role' => 'manager']);
 ```
 
 ### Guards
@@ -72,7 +93,7 @@ $sm = StateMachine::define()
     ->states(['pending', 'processing', 'shipped'])
     ->initial('pending')
     ->transition('process', 'pending', 'processing')
-        ->guard(fn (object $order) => $order->isPaid)
+        ->guard(fn (object $order, array $payload) => $order->isPaid)
     ->transition('ship', 'processing', 'shipped')
     ->build();
 ```
@@ -84,8 +105,8 @@ $sm = StateMachine::define()
     ->states(['pending', 'processing'])
     ->initial('pending')
     ->transition('process', 'pending', 'processing')
-        ->before(fn (object $order) => $order->log[] = 'Processing started')
-        ->after(fn (object $order) => $order->log[] = 'Processing complete')
+        ->before(fn (object $order, array $payload) => $order->log[] = 'Processing started')
+        ->after(fn (object $order, array $payload) => $order->log[] = 'Processing complete')
     ->build();
 ```
 
@@ -106,9 +127,10 @@ $history->last(); // TransitionResult { transition: 'ship', from: 'processing', 
 | Method | Description |
 |--------|-------------|
 | `StateMachine::define()` | Create a new `StateMachineBuilder` |
-| `$sm->apply(object $entity, string $transition)` | Apply a transition, returns `TransitionResult` |
-| `$sm->can(object $entity, string $transition)` | Check if a transition is allowed |
-| `$sm->allowedTransitions(object $entity)` | Get names of all allowed transitions |
+| `$sm->apply(object $entity, string $transition, array $payload = [])` | Apply a transition, returns `TransitionResult` |
+| `$sm->can(object $entity, string $transition, array $payload = [])` | Check if a transition is allowed |
+| `$sm->allowedTransitions(object $entity, array $payload = [])` | Get names of all allowed transitions |
+| `$sm->availableTransitions(object $entity, array $payload = [])` | Alias for `allowedTransitions()` |
 | `$sm->currentState(object $entity)` | Get the entity's current state |
 | `$sm->history()` | Get the `TransitionHistory` instance |
 | `$sm->initialState()` | Get the defined initial state |
@@ -128,9 +150,9 @@ $history->last(); // TransitionResult { transition: 'ship', from: 'processing', 
 
 | Method | Description |
 |--------|-------------|
-| `->guard(callable $guard)` | Add a guard (must return `true` to allow) |
-| `->before(callable $hook)` | Add a before-transition hook |
-| `->after(callable $hook)` | Add an after-transition hook |
+| `->guard(callable $guard)` | Add a guard `(object $entity, array $payload): bool` |
+| `->before(callable $hook)` | Add a before-transition hook `(object $entity, array $payload): void` |
+| `->after(callable $hook)` | Add an after-transition hook `(object $entity, array $payload): void` |
 
 
 ## Development
