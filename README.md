@@ -9,9 +9,7 @@ Declarative state machine with guards, hooks, and transition history.
 
 ## Requirements
 
-| Dependency | Version |
-|------------|---------|
-| PHP        | ^8.2    |
+- PHP 8.2+
 
 
 ## Installation
