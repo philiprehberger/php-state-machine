@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhilipRehberger\StateMachine;
 
+use LogicException;
 use PhilipRehberger\StateMachine\Exceptions\InvalidStateException;
 use PhilipRehberger\StateMachine\Exceptions\TransitionNotAllowedException;
 use PhilipRehberger\StateMachine\History\TransitionHistory;
@@ -22,12 +23,16 @@ final class StateMachine
      * @param  string  $initial  Initial state for new entities
      * @param  string  $stateProperty  Property name on entities that holds state
      * @param  array<int, Transition>  $transitions  Defined transitions
+     * @param  array<string, array<int, callable>>  $enterHooks  State entry hooks
+     * @param  array<string, array<int, callable>>  $exitHooks  State exit hooks
      */
     public function __construct(
         private readonly array $states,
         private readonly string $initial,
         private readonly string $stateProperty,
         private readonly array $transitions,
+        private readonly array $enterHooks = [],
+        private readonly array $exitHooks = [],
     ) {
         $this->history = new TransitionHistory;
     }
@@ -65,6 +70,8 @@ final class StateMachine
             $hook($entity, $payload);
         }
 
+        $this->fireExitHooks($currentState, $entity, $transition);
+
         $this->setState($entity, $transitionDef->to);
 
         $result = new TransitionResult(
@@ -75,6 +82,8 @@ final class StateMachine
         );
 
         $this->history->record($result);
+
+        $this->fireEnterHooks($transitionDef->to, $entity, $transition);
 
         foreach ($transitionDef->afterHooks as $hook) {
             $hook($entity, $payload);
@@ -131,6 +140,52 @@ final class StateMachine
     public function availableTransitions(object $entity, array $payload = []): array
     {
         return $this->allowedTransitions($entity, $payload);
+    }
+
+    /**
+     * Rollback the most recent transition by reverting to the previous state.
+     *
+     * @throws LogicException If history is empty
+     */
+    public function rollback(object $entity): TransitionResult
+    {
+        $last = $this->history->last();
+
+        if ($last === null) {
+            throw new LogicException('Cannot rollback: no transition history available.');
+        }
+
+        $currentState = $this->currentState($entity);
+
+        $this->setState($entity, $last->from);
+
+        $result = new TransitionResult(
+            transition: 'rollback:'.$last->transition,
+            from: $currentState,
+            to: $last->from,
+            entity: $entity,
+        );
+
+        $this->history->record($result);
+
+        return $result;
+    }
+
+    /**
+     * Generate a Mermaid state diagram string.
+     */
+    public function toMermaid(): string
+    {
+        $lines = ['stateDiagram-v2'];
+        $lines[] = '    [*] --> '.$this->initial;
+
+        foreach ($this->transitions as $transition) {
+            foreach ($transition->from as $from) {
+                $lines[] = '    '.$from.' --> '.$transition->to.' : '.$transition->name;
+            }
+        }
+
+        return implode("\n", $lines);
     }
 
     /**
@@ -213,5 +268,25 @@ final class StateMachine
     {
         $property = $this->stateProperty;
         $entity->{$property} = $state;
+    }
+
+    /**
+     * Fire entry hooks for the given state.
+     */
+    private function fireEnterHooks(string $state, object $entity, string $transition): void
+    {
+        foreach ($this->enterHooks[$state] ?? [] as $hook) {
+            $hook($entity, $transition);
+        }
+    }
+
+    /**
+     * Fire exit hooks for the given state.
+     */
+    private function fireExitHooks(string $state, object $entity, string $transition): void
+    {
+        foreach ($this->exitHooks[$state] ?? [] as $hook) {
+            $hook($entity, $transition);
+        }
     }
 }

@@ -19,6 +19,12 @@ final class StateMachineBuilder
     /** @var array<int, TransitionBuilder> */
     private array $transitionBuilders = [];
 
+    /** @var array<string, array<int, callable>> */
+    private array $enterHooks = [];
+
+    /** @var array<string, array<int, callable>> */
+    private array $exitHooks = [];
+
     /**
      * Define the valid states for the state machine.
      *
@@ -47,6 +53,30 @@ final class StateMachineBuilder
     public function stateProperty(string $property): self
     {
         $this->stateProperty = $property;
+
+        return $this;
+    }
+
+    /**
+     * Register a hook that fires whenever the state machine enters the given state.
+     *
+     * @param  callable(object, string): void  $hook  Receives the entity and transition name
+     */
+    public function onEnter(string $state, callable $hook): self
+    {
+        $this->enterHooks[$state][] = $hook;
+
+        return $this;
+    }
+
+    /**
+     * Register a hook that fires whenever the state machine exits the given state.
+     *
+     * @param  callable(object, string): void  $hook  Receives the entity and transition name
+     */
+    public function onExit(string $state, callable $hook): self
+    {
+        $this->exitHooks[$state][] = $hook;
 
         return $this;
     }
@@ -83,6 +113,8 @@ final class StateMachineBuilder
             initial: $this->initial,
             stateProperty: $this->stateProperty,
             transitions: $transitions,
+            enterHooks: $this->enterHooks,
+            exitHooks: $this->exitHooks,
         );
     }
 }
