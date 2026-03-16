@@ -2,7 +2,6 @@
 
 [![Tests](https://github.com/philiprehberger/php-state-machine/actions/workflows/tests.yml/badge.svg)](https://github.com/philiprehberger/php-state-machine/actions/workflows/tests.yml)
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/philiprehberger/php-state-machine.svg)](https://packagist.org/packages/philiprehberger/php-state-machine)
-[![Total Downloads](https://img.shields.io/packagist/dt/philiprehberger/php-state-machine.svg)](https://packagist.org/packages/philiprehberger/php-state-machine)
 [![PHP Version Require](https://img.shields.io/packagist/php-v/philiprehberger/php-state-machine.svg)](https://packagist.org/packages/philiprehberger/php-state-machine)
 [![License](https://img.shields.io/github/license/philiprehberger/php-state-machine)](LICENSE)
 
