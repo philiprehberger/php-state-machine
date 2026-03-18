@@ -4,7 +4,7 @@
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/philiprehberger/php-state-machine.svg)](https://packagist.org/packages/philiprehberger/php-state-machine)
 [![License](https://img.shields.io/github/license/philiprehberger/php-state-machine)](LICENSE)
 
-Declarative state machine with guards, hooks, and transition history. Framework-agnostic, zero external dependencies.
+Declarative state machine with guards, hooks, and transition history.
 
 ---
 
