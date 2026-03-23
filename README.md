@@ -6,7 +6,6 @@
 
 Declarative state machine with guards, hooks, and transition history.
 
----
 
 ## Requirements
 
@@ -14,7 +13,6 @@ Declarative state machine with guards, hooks, and transition history.
 |------------|---------|
 | PHP        | ^8.2    |
 
----
 
 ## Installation
 
@@ -22,7 +20,6 @@ Declarative state machine with guards, hooks, and transition history.
 composer require philiprehberger/php-state-machine
 ```
 
----
 
 ## Usage
 
@@ -103,7 +100,6 @@ $history->all();  // [TransitionResult, TransitionResult]
 $history->last(); // TransitionResult { transition: 'ship', from: 'processing', to: 'shipped' }
 ```
 
----
 
 ## API
 
@@ -136,7 +132,6 @@ $history->last(); // TransitionResult { transition: 'ship', from: 'processing', 
 | `->before(callable $hook)` | Add a before-transition hook |
 | `->after(callable $hook)` | Add an after-transition hook |
 
----
 
 ## Development
 
