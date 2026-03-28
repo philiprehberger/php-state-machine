@@ -1,8 +1,12 @@
 # PHP State Machine
 
-[![Tests](https://github.com/philiprehberger/php-state-machine/actions/workflows/tests.yml/badge.svg)](https://github.com/philiprehberger/php-state-machine/actions/workflows/tests.yml)
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/philiprehberger/php-state-machine.svg)](https://packagist.org/packages/philiprehberger/php-state-machine)
+[![CI](https://github.com/philiprehberger/php-state-machine/actions/workflows/tests.yml/badge.svg)](https://github.com/philiprehberger/php-state-machine/actions/workflows/tests.yml)
+[![Packagist Version](https://img.shields.io/packagist/v/philiprehberger/php-state-machine)](https://packagist.org/packages/philiprehberger/php-state-machine)
+[![GitHub Release](https://img.shields.io/github/v/release/philiprehberger/php-state-machine)](https://github.com/philiprehberger/php-state-machine/releases)
+[![Last Updated](https://img.shields.io/github/last-commit/philiprehberger/php-state-machine)](https://github.com/philiprehberger/php-state-machine/commits/main)
 [![License](https://img.shields.io/github/license/philiprehberger/php-state-machine)](LICENSE)
+[![Bug Reports](https://img.shields.io/github/issues/philiprehberger/php-state-machine/bug)](https://github.com/philiprehberger/php-state-machine/issues?q=label%3Abug)
+[![Feature Requests](https://img.shields.io/github/issues/philiprehberger/php-state-machine/enhancement)](https://github.com/philiprehberger/php-state-machine/issues?q=label%3Aenhancement)
 [![Sponsor](https://img.shields.io/badge/sponsor-GitHub%20Sponsors-ec6cb9)](https://github.com/sponsors/philiprehberger)
 
 Declarative state machine with guards, hooks, and transition history.
@@ -109,6 +113,40 @@ $sm = StateMachine::define()
     ->build();
 ```
 
+### State entry/exit hooks
+
+```php
+$sm = StateMachine::define()
+    ->states(['draft', 'review', 'published'])
+    ->initial('draft')
+    ->onEnter('review', fn (object $entity, string $transition) => $entity->log[] = "Entered review via $transition")
+    ->onExit('draft', fn (object $entity, string $transition) => $entity->log[] = "Left draft via $transition")
+    ->transition('submit', 'draft', 'review')
+    ->transition('approve', 'review', 'published')
+    ->build();
+```
+
+### Rollback the last transition
+
+```php
+$sm->apply($order, 'process');
+$sm->rollback($order);
+// $order->state === 'pending'
+```
+
+### Mermaid diagram export
+
+```php
+echo $sm->toMermaid();
+// stateDiagram-v2
+//     [*] --> pending
+//     pending --> processing : process
+//     processing --> shipped : ship
+//     shipped --> delivered : deliver
+//     pending --> cancelled : cancel
+//     processing --> cancelled : cancel
+```
+
 ### Transition history
 
 ```php
@@ -131,6 +169,8 @@ $history->last(); // TransitionResult { transition: 'ship', from: 'processing', 
 | `$sm->allowedTransitions(object $entity, array $payload = [])` | Get names of all allowed transitions |
 | `$sm->availableTransitions(object $entity, array $payload = [])` | Alias for `allowedTransitions()` |
 | `$sm->currentState(object $entity)` | Get the entity's current state |
+| `$sm->rollback(object $entity)` | Revert the most recent transition |
+| `$sm->toMermaid()` | Generate a Mermaid state diagram string |
 | `$sm->history()` | Get the `TransitionHistory` instance |
 | `$sm->initialState()` | Get the defined initial state |
 | `$sm->states()` | Get all defined states |
@@ -142,6 +182,8 @@ $history->last(); // TransitionResult { transition: 'ship', from: 'processing', 
 | `->states(array $states)` | Define valid states |
 | `->initial(string $state)` | Set the initial state |
 | `->stateProperty(string $property)` | Set the entity property name (default: `'state'`) |
+| `->onEnter(string $state, callable $hook)` | Register a hook that fires when entering a state |
+| `->onExit(string $state, callable $hook)` | Register a hook that fires when leaving a state |
 | `->transition(string $name, string\|array $from, string $to)` | Define a transition |
 | `->build()` | Build the `StateMachine` |
 
@@ -160,9 +202,15 @@ $history->last(); // TransitionResult { transition: 'ship', from: 'processing', 
 composer install
 vendor/bin/phpunit
 vendor/bin/pint --test
-vendor/bin/phpstan analyse
 ```
+
+
+## Support
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Philip%20Rehberger-blue?logo=linkedin)](https://www.linkedin.com/in/philiprehberger)
+[![Packages](https://img.shields.io/badge/All%20Packages-philiprehberger.com-blue)](https://philiprehberger.com)
+
 
 ## License
 
-MIT
+[MIT](LICENSE)

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-03-27
+
+### Added
+- State entry/exit hooks via `onEnter()` and `onExit()` on the builder
+- `StateMachine::rollback()` for reverting the most recent transition
+- `StateMachine::toMermaid()` for generating Mermaid state diagrams
+
 ## [1.1.1] - 2026-03-23
 
 ### Changed
