@@ -1,28 +1,20 @@
 # PHP State Machine
 
-[![CI](https://github.com/philiprehberger/php-state-machine/actions/workflows/tests.yml/badge.svg)](https://github.com/philiprehberger/php-state-machine/actions/workflows/tests.yml)
-[![Packagist Version](https://img.shields.io/packagist/v/philiprehberger/php-state-machine)](https://packagist.org/packages/philiprehberger/php-state-machine)
-[![GitHub Release](https://img.shields.io/github/v/release/philiprehberger/php-state-machine)](https://github.com/philiprehberger/php-state-machine/releases)
-[![Last Updated](https://img.shields.io/github/last-commit/philiprehberger/php-state-machine)](https://github.com/philiprehberger/php-state-machine/commits/main)
-[![License](https://img.shields.io/github/license/philiprehberger/php-state-machine)](LICENSE)
-[![Bug Reports](https://img.shields.io/github/issues/philiprehberger/php-state-machine/bug)](https://github.com/philiprehberger/php-state-machine/issues?q=label%3Abug)
-[![Feature Requests](https://img.shields.io/github/issues/philiprehberger/php-state-machine/enhancement)](https://github.com/philiprehberger/php-state-machine/issues?q=label%3Aenhancement)
-[![Sponsor](https://img.shields.io/badge/sponsor-GitHub%20Sponsors-ec6cb9)](https://github.com/sponsors/philiprehberger)
+[![Tests](https://github.com/philiprehberger/php-state-machine/actions/workflows/tests.yml/badge.svg)](https://github.com/philiprehberger/php-state-machine/actions/workflows/tests.yml)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/philiprehberger/php-state-machine.svg)](https://packagist.org/packages/philiprehberger/php-state-machine)
+[![Last updated](https://img.shields.io/github/last-commit/philiprehberger/php-state-machine)](https://github.com/philiprehberger/php-state-machine/commits/main)
 
 Declarative state machine with guards, hooks, and transition history.
-
 
 ## Requirements
 
 - PHP 8.2+
-
 
 ## Installation
 
 ```bash
 composer require philiprehberger/php-state-machine
 ```
-
 
 ## Usage
 
@@ -158,7 +150,6 @@ $history->all();  // [TransitionResult, TransitionResult]
 $history->last(); // TransitionResult { transition: 'ship', from: 'processing', to: 'shipped' }
 ```
 
-
 ## API
 
 | Method | Description |
@@ -195,7 +186,6 @@ $history->last(); // TransitionResult { transition: 'ship', from: 'processing', 
 | `->before(callable $hook)` | Add a before-transition hook `(object $entity, array $payload): void` |
 | `->after(callable $hook)` | Add an after-transition hook `(object $entity, array $payload): void` |
 
-
 ## Development
 
 ```bash
@@ -204,12 +194,23 @@ vendor/bin/phpunit
 vendor/bin/pint --test
 ```
 
-
 ## Support
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Philip%20Rehberger-blue?logo=linkedin)](https://www.linkedin.com/in/philiprehberger)
-[![Packages](https://img.shields.io/badge/All%20Packages-philiprehberger.com-blue)](https://philiprehberger.com)
+If you find this project useful:
 
+⭐ [Star the repo](https://github.com/philiprehberger/php-state-machine)
+
+🐛 [Report issues](https://github.com/philiprehberger/php-state-machine/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
+
+💡 [Suggest features](https://github.com/philiprehberger/php-state-machine/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
+
+❤️ [Sponsor development](https://github.com/sponsors/philiprehberger)
+
+🌐 [All Open Source Projects](https://philiprehberger.com/open-source-packages)
+
+💻 [GitHub Profile](https://github.com/philiprehberger)
+
+🔗 [LinkedIn Profile](https://www.linkedin.com/in/philiprehberger)
 
 ## License
 
